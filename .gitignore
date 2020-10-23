@@ -1,0 +1,6 @@
+*~
+*.inspect
+*.log
+*.json
+*.env
+templates/

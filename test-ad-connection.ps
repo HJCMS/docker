@@ -1,0 +1,57 @@
+#############################################################################
+# This file is part of the Docker Samba Active Diretory Project
+#
+# Copyright (C) HJCMS http://www.hjcms.de, (C) 2007-2020
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Library General Public
+# License as published by the Free Software Foundation; either
+# version 2 of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Library General Public License for more details.
+#
+# You should have received a copy of the GNU Library General Public License
+# along with this library; see the file COPYING.LIB.  If not, write to
+# the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+# Boston, MA 02110-1301, USA.
+#############################################################################
+
+set _host=""
+set _dnsip=""
+
+Write-Host -ForegroundColor Green " -- DNS port: 53 protocol: tcp"
+nslookup -q=SRV _domain._tcp.${_host} ${_dnsip}
+Get-DnsServerResourceRecord -ZoneName “contoso.com” -RRType Srv
+
+Write-Host -ForegroundColor Green " -- DNS port: 53 protocol: udp"
+nslookup -q=SRV _domain._udp.${_host} ${_dnsip}
+
+Write-Host -ForegroundColor Green " -- KERBEROS port: 88 protocol: tcp"
+nslookup -q=SRV _kerberos._tcp.${_host} ${_dnsip}
+
+Write-Host -ForegroundColor Green " -- MSRPC e.g. NETLOGON port: 135 protocol: tcp"
+nslookup -q=SRV _rpc._tcp.${_host} ${_dnsip}
+
+Write-Host -ForegroundColor Green " -- SMB Network Browsing port: 139 protocol: tcp"
+nslookup -q=SRV _netbios-ssn._tcp.${_host} ${_dnsip}
+
+Write-Host -ForegroundColor Green " -- LDAP port: 389 protocol: tcp"
+nslookup -q=SRV _ldap._tcp.${_host} ${_dnsip}
+
+Write-Host -ForegroundColor Green " -- SMB/Filesharing port: 445 protocol: tcp"
+nslookup -q=SRV _smb._tcp.${_host} ${_dnsip}
+
+Write-Host -ForegroundColor Green " -- OPTIONAL SMB _workstation._tcp"
+nslookup -q=SRV _workstation._tcp.${_host} ${_dnsip}
+
+Write-Host -ForegroundColor Green " -- Kerberos/Password (kpasswd) port: 464 protocol: tcp"
+nslookup -q=SRV _kpasswd._tcp.${_host} ${_dnsip}
+
+Write-Host -ForegroundColor Green " -- LDAPs (TLS) port: 636 protocol: tcp"
+nslookup -q=SRV _ldaps._tcp.${_host} ${_dnsip}
+
+Write-Host -ForegroundColor Green " -- LDAP Global Catalog (GC) port: 3268 protocol: tcp"
+nslookup -q=SRV _gc._tcp.${_host} ${_dnsip}

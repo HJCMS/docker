@@ -1,0 +1,14 @@
+# -*- coding: utf-8 -*-
+# vim: set fileencoding=utf-8
+version: '3.8'
+services:
+  ad-controller:
+    build:
+      context: .
+      cache_from: ["debian","buster"]
+      dockerfile: Dockerfile
+      labels:
+        de.hjcms.description: "Samba Active Directory Controller"
+        de.hjcms.license: "GNU/GPLv3"
+        de.hjcms.label: "SAMBA"
+#EOF
