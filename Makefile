@@ -5,8 +5,7 @@ PROJECTTARGET 	= smb
 PACKAGENAME 	= ad-controller
 REPO		= $(PROJECTTARGET)_$(PACKAGENAME)
 TAG		= latest
-HOSTNAME	= samba.virt
-REMOVE		= rm -vf
+HOSTNAME	= ad.smb.virt
 INIT_SCRIPT	= /usr/local/bin/domain-provision.sh
 DOCKER		= docker
 DOCKER_COMPOSE	= docker-compose
@@ -23,7 +22,7 @@ check:
 	$(DOCKER_COMPOSE) config
 
 clean:
-	$(REMOVE) *~ .gitignore~
+	@rm -vf *~ .gitignore~ *.log
 
 build:
 	$(DOCKER_COMPOSE) --project-name $(PROJECTTARGET) \
