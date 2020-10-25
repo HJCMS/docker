@@ -2,7 +2,7 @@
 # vim: set fileencoding=utf-8
 # vim: set t_Co=256
 PROJECTTARGET 	= smb
-PACKAGENAME 	= ad-controller
+PACKAGENAME 	= ad-dc
 REPO		= $(PROJECTTARGET)_$(PACKAGENAME)
 TAG		= latest
 HOSTNAME	= ad.smb.virt

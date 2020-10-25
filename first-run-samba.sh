@@ -23,7 +23,6 @@
 #############################################################################
 
 set +x
-set -o errexit
 
 ## Hostname (FQDN)
 declare AD_HOSTNAME="${1:-"ad.smb.virt"}"
@@ -51,22 +50,15 @@ fi
 
 #############################################################################
 
-cat Makefile | \
-  sed 's/[ \t]\+//g' | \
-  grep '^\<\(PROJECTTARGET\|PACKAGENAME\)\+\>' > run.env
+_image="$(docker images --filter label=de.hjcms.label=SAMBA \
+  --format '{{.CreatedAt}} {{.Repository}}:{{.Tag}}' | \
+  sort -r | awk '{print $NF}' | head -1)"
 
-source run.env
-
-#############################################################################
-
-rm -f docker-ad-run.log
-
+echo "Starting ${_image}"
 docker run --privileged -it \
   -h "${AD_HOSTNAME}" \
   -e "AD_DEBUGLEVEL=${AD_DEBUGLEVEL}" \
   -e "AD_PASSWORD=${AD_PASSWORD}" \
-  ${PROJECTTARGET}_${PACKAGENAME} | tee docker-ad-run.log
-
-rm -vf run.env
+  ${_image} | tee docker-ad-run.log
 
 ##EOF

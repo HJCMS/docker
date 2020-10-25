@@ -3,4 +3,5 @@
 *.log
 *.json
 *.env
+*.tar
 templates/
