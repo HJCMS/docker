@@ -39,7 +39,7 @@ cat <<EOF
   WARNING
     Using default script settings!
     if you want to change this, use:
-      ./$(basename $0) "Fully Qualified Domain Name (FQDN)" "password"
+      ./$(basename $0) "[Fully Qualified Domain Name (FQDN)]" "[password]"
 
   Using Script Defaults:
     AD_PASSWORD=${AD_PASSWORD}

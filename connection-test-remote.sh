@@ -64,10 +64,11 @@ function _usage ()
 cat <<EOF
 
   USAGE:
-    ./test-ad-connection.sh -i [Container ID] -e
+    ./test-ad-connection.sh -i [IP] -d [Domain] -e
 
   OPTIONS:
-    -i  Container ID
+    -i  IPv4 Address
+    -d  DNS Domain
     -e  if installed, enabled nmap TCP port scan support
 
   EXAMPLE:
@@ -75,15 +76,16 @@ cat <<EOF
 
 EOF
 
-  docker ps --format "table {{.ID}}\t{{.Image}}\t{{.Networks}}\t{{.Names}}"
-  echo
   exit 1
 }
 
-while getopts i:s:e opt; do
+while getopts i:d:e opt; do
   case $opt in
     i)
-      _id="$OPTARG"
+      _nip="$OPTARG"
+      ;;
+    d)
+      _nsh="$OPTARG"
       ;;
     e)
       _nmap=1
@@ -99,14 +101,6 @@ test -x "$(which --skip-alias --skip-functions dig 2>/dev/null)" || {
   exit 1
 }
 
-test -n "${_id}" || {
-  _print "Missing Container ID"
-  _usage
-}
-
-_nip=$(docker inspect \
-  --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${_id} 2>/dev/null)
-
 test -n "${_nip}" || {
   _print "Missing DNS IPv4 Address"
   _usage
@@ -116,23 +110,18 @@ _print "Ping to ${_nip}"
 _ping ${_nip}
 
 _print "DNS Domain"
-_temp=$(docker exec -it ${_id} hostname -d)
-_nsh=$(_trim ${_temp})
-
 test -n "${_nsh})" || {
   _print "Missing DNS Domain"
   _usage
 }
-echo "- ${_nsh})"
+echo "- ${_nsh}"
 
 _print "FQDN"
-_temp=$(docker exec -it ${_id} hostname -f)
-_fqdn=$(_trim ${_temp})
+_fqdn="$(dig -4 -t NS ${_nsh} @${_nip} +noall +answer | awk '{print $NF}')"
 echo "- ${_fqdn}"
 
 _print "Site"
-_temp=$(docker exec -it ${_id} hostname -s)
-_site=$(_trim ${_temp})
+_site="$(echo ${_fqdn} | cut -d. -f1)"
 echo "- ${_site}"
 
 _notify "SOA/NS and A Records"
