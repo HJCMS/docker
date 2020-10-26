@@ -19,10 +19,12 @@ Open a new Terminal and run:
 to fetch the IP Address of your running Docker Container.
 
 Next step, start my iptables generator and realize the Iptables Rules.
+
 	./generate-iptable.sh
 
 Capture the Docker Interface with tcpdump and ping it from outside:
-  tcpdump 'icmp[icmptype] == icmp-echo or icmp[icmptype] == icmp-echoreply' -i ${_bridgeiface} -vvv
+
+  tcpdump 'icmp[icmptype] == icmp-echo or icmp[icmptype] == icmp-echoreply' -i docker0 -vvv
 
 Now Check from your Network with ping,nmap or nc.
 
