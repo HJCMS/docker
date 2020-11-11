@@ -5,8 +5,6 @@ PROJECTTARGET 	= smb
 PACKAGENAME 	= ad-dc
 REPO		= $(PROJECTTARGET)_$(PACKAGENAME)
 TAG		= latest
-HOSTNAME	= ad.smb.virt
-INIT_SCRIPT	= /usr/local/bin/domain-provision.sh
 DOCKER		= docker
 DOCKER_COMPOSE	= docker-compose
 
@@ -25,11 +23,9 @@ clean:
 	@rm -vf *~ .gitignore~ *.log
 
 build:
-	$(DOCKER_COMPOSE) --project-name $(PROJECTTARGET) \
-		--file docker-compose.yml build
-
-run:
-	$(DOCKER) run -it -h $(HOSTNAME) --privileged $(REPO):$(TAG)
+	$(DOCKER_COMPOSE) \
+		--project-name $(PROJECTTARGET) \
+		--file docker-compose.yml build --force-rm
 
 inspect:
 	$(DOCKER) inspect $(REPO):$(TAG)

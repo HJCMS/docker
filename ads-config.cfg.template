@@ -1,0 +1,93 @@
+## Type:        string
+## Default:     ""
+## Section:     "Domain Provision"
+#
+# This is the primary Active Directory Domain name.
+#
+ADS_DOMAIN=""
+
+## Type:        string
+## Default:     ""
+## Section:     "Domain Provision"
+#
+# Default DNS Forwarder in your local area network.
+# This are the Global "dns forwarder" Option from smb.conf
+# Configuration and also needed to automation my scripts.
+#
+# NOTE
+#   The internal DNS Service from Samba, currently
+#   not supporting DNS-Stub Zones and Forwarding.
+#
+ADS_DNS_FORWARDER=""
+
+## Type:        string
+## Default:     ""
+## Section:     "Domain Provision"
+#
+# We need a fixed CIDR for Active
+# Directory Domain Services.
+#
+ADS_DNS_SEARCH=""
+
+## Type:        string
+## Default:     "P@55word"
+## Section:     "Domain Provision"
+#
+# Active Directory Administrator Password
+#
+ADS_PASSWORD=""
+
+## Type:        string
+## Default:     ""
+## Section:     "Domain Provision"
+#
+# (FQDN) Active Directory Server Hostname
+#
+ADS_HOSTNAME=""
+
+## Type:        string
+## Default:     ""
+## Section:     "Domain Provision"
+#
+# We need a fixed CIDR for Active
+# Directory Domain Services.
+#
+ADS_IPV4ADDR=""
+
+## Type:        integer
+## Default:     3
+## Section:     "Domain Provision"
+#
+# Samba Debug level (range 0-7)
+#
+ADS_DEBUGLEVEL=3
+
+## Type:        string
+## Default:     ""
+## Section:     "Domain Provision"
+#
+# A Samba Docker Container need a Volume for Read
+# Write Access of the sysvol and User shares.
+#
+# WARNING:
+#  This must accessible by the User of the
+#  Docker Process. For SELinux based Systems you
+#  need to write a fcontext for this target.
+#
+# EXAMPLE:
+#  semanage fcontext -a -f a -t container_var_lib_t \
+#   -r 's0' '/var/users/docker/(.*)'
+#
+ADS_MOUNT_TARGET=/var/users/docker/volumes/${ADS_HOSTNAME}
+
+## Type:        string
+## Default:     ""
+## Section:     "Domain Join"
+#
+# NOTE:
+#   The Kerberos REALM cannot be the same as
+#   the ${ADS_DOMAIN} name.
+#
+ADS_REALM=""
+
+##EOF

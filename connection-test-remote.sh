@@ -23,8 +23,6 @@
 set +x
 set -o errexit
 
-## Container ID
-declare _id=""
 ## DNS Hostname
 declare _nsh=""
 ## DNS IpAddress

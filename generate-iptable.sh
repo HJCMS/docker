@@ -22,7 +22,13 @@
 # Boston, MA 02110-1301, USA.
 #############################################################################
 
-set +x
+set -Eeo pipefail
+
+test -e ads-config.cfg || {
+  echo "FATAL: ads-config.cfg not exists"
+  exit 1
+}
+source ads-config.cfg
 
 declare _bindAddr=""
 declare _interface=""
@@ -43,7 +49,7 @@ _defaultIPv4Addr
 echo
 docker ps --format "table {{.ID}}\t{{.Image}}\t{{.Networks}}\t{{.Status}}\t{{.Names}}"
 
-declare -a _info=($(docker ps --filter label=de.hjcms.label=SAMBA --format "{{.ID}} {{.Networks}} {{.Names}} {{.Image}}"))
+declare -a _info=($(docker ps -a --filter label=de.hjcms.label=SAMBA --format "{{.ID}} {{.Networks}} {{.Names}} {{.Image}}"))
 
 if test ! -x "$(which jq 2>/dev/null)" ; then
   echo "Missing json Parser https://stedolan.github.io/jq/"

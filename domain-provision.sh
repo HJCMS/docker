@@ -22,53 +22,132 @@
 # Boston, MA 02110-1301, USA.
 #############################################################################
 
-_DEBUGLEVEL="${AD_DEBUGLEVEL:-"3"}"
-echo "-- Debuglevel:${_DEBUGLEVEL}"
+set -Eeo pipefail
 
-_HOSTNAME="$(hostname -s)"
-echo "-- Hostname:${_HOSTNAME}"
-
-_DOMAIN="$(hostname -f)"
-echo "-- DNS Domain and Workgroup:${_DOMAIN}"
-
-_PASSWORD="${AD_PASSWORD:-"P@55word"}"
+_DEBUGLEVEL="${ADS_DEBUGLEVEL:-"3"}"
+_HOST="$(hostname -s)"
+_DOMAIN="${ADS_DOMAIN:-"$(hostname -f)"}"
+_DNSSEARCH="${ADS_DNS_SEARCH:-"${_DOMAIN}"}"
+_REALM="${ADS_REALM:-"$(echo $(hostname -d) | awk '{print toupper($NF)}')"}"
+_PASSWORD="${ADS_PASSWORD:-"P@55word"}"
 if test -n "${_PASSWORD}" ; then
   echo "-- AD Password set"
 else
   echo "-- WARNING - AD Password not set"
 fi
 
-##  | sed 's/\./ /'
-_KRBREALM="$( echo $(hostname -d) | awk '{print $NF}' )"
-echo "-- Kerberos REALM:${_KRBREALM}"
+## replace auto generated docker dns entries at start!
+if [[ -n "${_DOMAIN}" ]] && [[ -n "${ADS_DNS_FORWARDIP}" ]]; then
+  echo "Updating: /etc/resolv.conf"
+  cat > /etc/resolv.conf <<EOF
+nameserver localhost
+nameserver ${ADS_DNS_FORWARDIP}
+search ${_DNSSEARCH}
+options timeout:5
+EOF
+fi
 
-#############################################################################
+if test ! -f /etc/samba/smb.conf ; then
 
-if test -r /etc/samba/smb.conf ; then
-  echo "Start - Active Directory Controller"
-  /usr/sbin/samba --interactive --debuglevel=${_DEBUGLEVEL} --debug-stderr
-else
-  # make conflict with domain provisioning
   rm -f /etc/krb5.conf
+
+  if test ! -d /var/lib/samba ; then
+    cp -av /var/lib/samba.core /var/lib/samba
+  else
+    for d in usershares printers winbindd_privileged ; do
+      if test ! -d /var/lib/samba/${d} ; then
+        cp -av /var/lib/samba.core/${d} /var/lib/samba/
+      fi
+    done
+  fi
+
+  if test ! -d /var/lib/samba/sysvol ; then
+    mkdir -p /var/lib/samba/sysvol/${_DOMAIN}/scripts
+    chown -R root:sambashare /var/lib/samba/sysvol
+  fi
+
+  echo "cat /etc/resolv.conf"
+  cat /etc/resolv.conf
 
   samba-tool domain provision \
     --use-rfc2307 \
+    --host-ip=${ADS_SERVER_IPV4} \
+    --host-name=${_HOST} \
+    --realm=${_REALM} \
     --domain=${_DOMAIN} \
-    --realm=${_KRBREALM} \
-    --site=${_HOSTNAME} \
+    --site=${_HOST} \
     --server-role=dc \
     --dns-backend=SAMBA_INTERNAL \
-    --adminpass="${_PASSWORD}"
+    --adminpass="${_PASSWORD}" \
+    --option="vfs objects = dfs_samba4 acl_xattr xattr_tdb" \
+    --option="acl allow execute always = yes"
 
   if [[ $? == 0 ]] ; then
-    install -vm 0600 /var/lib/samba/private/krb5.conf /etc/krb5.conf
+    install -vm 0640 /var/lib/samba/private/krb5.conf /etc/krb5.conf
+
+    if test -e /etc/samba/smb.conf ; then
+      _dfsnamespace=$(hostname -f)
+      mkdir -p /var/lib/samba/${_dfsnamespace}
+      chown root:sambashare /var/lib/samba/${_dfsnamespace}
+      chmod 0775 /var/lib/samba/${_dfsnamespace}
+
+    cat >> /etc/samba/smb.conf <<EOF
+
+## dfsutil target add \\\\${_dfsnamespace}\dfs
+[dfs]
+  msdfs root = Yes
+  path = /var/lib/samba/${_dfsnamespace}
+  valid users = +"${_DOMAIN}\Domain Users"
+  read only = No
+
+EOF
+    fi
+
     testparm /etc/samba/smb.conf
   fi
-
-  if test -r /etc/samba/smb.conf ; then
-    echo "Init - Active Directory Controller"
-    /usr/sbin/samba --interactive --debuglevel=5 --debug-stderr
-  fi
 fi
+
+if test -r /etc/samba/smb.conf ; then
+  samba --show-build
+
+  samba -D --debuglevel=${_DEBUGLEVEL}
+fi
+
+cat <<EOF
+
+  Debuglevel      ${_DEBUGLEVEL}
+  Hostname        ${_HOST}
+  DNS Domain      ${_DOMAIN}
+  Kerberos REALM  ${_REALM}
+  DNS Forwarder   ${ADS_FORWARDER}
+  PASSWORD        ${_PASSWORD}
+
+  Debugging options:
+    ps axf | egrep "samba|smbd|winbindd"
+    ss -tlpn | grep "samba"
+    cat /var/lib/samba/private/krb5.conf
+    klist -k /var/lib/samba/private/secrets.keytab
+
+  [old-tools]
+    smbclient -L localhost -N
+    smbcontrol -t2 all onlinestatus
+
+  [net]
+    net lookup name ${_DOMAIN}
+    net lookup master
+    net lookup <joined-host-admember>.${_DOMAIN}
+    net status sessions
+    net time -S localhost
+    net usersidlist
+
+  [samba-tool]
+    samba-tool dbcheck --cross-ncs
+    samba-tool gpo listall
+    samba-tool schema objectclass show classSchema
+
+EOF
+
+echo "Open subshell:"
+/bin/bash
 
 ##EOF

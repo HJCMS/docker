@@ -25,7 +25,7 @@ set -o errexit
 
 ## Container ID
 declare _id=""
-## DNS Hostname
+## DNS Domain
 declare _nsh=""
 ## DNS IpAddress
 declare _nip=""
